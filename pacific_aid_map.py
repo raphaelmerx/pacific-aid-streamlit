@@ -30,9 +30,18 @@ def load_data(nrows=None):
     return data
 
 
-data_load_state = st.text("Loading data...")
+def load_country_coords():
+    return pd.read_csv("country_coords.csv")
+
+
+country_coords = load_country_coords()
+
+
+data_load_state = st.markdown("Loading data...")
 data = load_data(None)
-data_load_state.text("Data loaded")
+data_load_state.markdown(
+    "All data from the [Lowy Institute Pacific Aid Map](https://pacificaidmap.lowyinstitute.org/)"
+)
 
 ## FILTERING
 
@@ -199,6 +208,48 @@ with col2:
     st.write(sum_value_df)
 
 # END: value by recipient table
+
+# BEGIN: map of value by recipient
+
+map_data = pd.merge(
+    sum_value_df.reset_index(), country_coords, on="recipient", how="left"
+)
+# remove those that have null latitude
+map_data = map_data[map_data["latitude"].notnull()]
+map_data[selected_transaction_type] = map_data["Value"].apply(humanize.intword)
+
+fig = px.scatter_geo(
+    map_data,
+    lat="latitude",
+    lon="longitude",
+    size="Value",
+    text="recipient",
+    hover_name="recipient",
+    hover_data={
+        "recipient": True,
+        selected_transaction_type: True,
+        "Value": False,
+        "latitude": False,
+        "longitude": False,
+    },
+    projection="natural earth",
+    title=f"{selected_transaction_type} by recipient map",
+)
+
+first_element = map_data.iloc[0]
+center_lat = first_element["latitude"]
+center_lon = first_element["longitude"]
+
+fig.update_geos(
+    center=dict(lat=center_lat, lon=center_lon),
+    projection=dict(scale=2),  # Adjust the scale as needed
+)
+
+# Show the plot
+st.plotly_chart(fig)
+
+
+# END: map of value by recipient
 
 # BEGIN: value by project
 
