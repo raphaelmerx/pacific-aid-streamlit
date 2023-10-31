@@ -202,15 +202,12 @@ with col2:
 
 # BEGIN: value by project
 
-# Group by "2023 project identifier" and aggregate
+# Group by unique combination of "project title", "donor", and "recipient" and aggregate
 grouped_data = (
-    filtered_data.groupby("2023 project identifier")
+    filtered_data.groupby(["project title", "donor", "recipient"])
     .agg(
         {
             "usd constant - transaction value": "sum",
-            "project title": "first",  # Assuming all titles are the same within each group
-            "donor": "first",  # Assuming all donors are the same within each group
-            "recipient": "first",  # Assuming all recipients are the same within each group
             "expectedstartdate": "first",  # Assuming all start dates are the same within each group
             "completiondate": "first",  # Assuming all completion dates are the same within each group
         }
@@ -229,7 +226,6 @@ grouped_data["completiondate"] = (
 # Create a DataFrame for display
 sum_value_df = pd.DataFrame(
     {
-        "Project": grouped_data["2023 project identifier"].astype(str),
         "Title": grouped_data["project title"],
         "Donor": grouped_data["donor"],
         "Recipient": grouped_data["recipient"],
@@ -241,11 +237,8 @@ sum_value_df = pd.DataFrame(
 sum_value_df = sum_value_df.sort_values(by=["Value"], ascending=False)
 sum_value_df["Value"] = sum_value_df["Value"].astype(int)
 
-# Set the index to "Project"
-sum_value_df = sum_value_df.set_index("Project")
-
 st.subheader(f"{selected_transaction_type} by project")
-st.write(sum_value_df)
+st.dataframe(sum_value_df, hide_index=True)
 
 
 # END: value by project
