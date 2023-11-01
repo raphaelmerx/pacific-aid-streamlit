@@ -30,8 +30,9 @@ def load_data(nrows=None):
     return data
 
 
+@st.cache_data
 def load_country_coords():
-    return pd.read_csv("country_coords.csv")
+    return pd.read_csv("./country_coords.csv")
 
 
 country_coords = load_country_coords()
