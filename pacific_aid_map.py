@@ -57,31 +57,32 @@ filtered_data = filtered_data[
 
 unique_donors = data["donor"].unique()
 unique_donors.sort()
-selected_donor = st.sidebar.selectbox("Donor", unique_donors, index=None)
-if selected_donor:
-    filtered_data = filtered_data[filtered_data["donor"] == selected_donor]
+selected_donors = st.sidebar.multiselect("Donor", unique_donors, default=None)
+if selected_donors:
+    filtered_data = filtered_data[filtered_data["donor"].isin(selected_donors)]
 
 unique_recipients = data["recipient"].unique()
 unique_recipients.sort()
-selected_recipient = st.sidebar.selectbox("Recipient", unique_recipients, index=None)
-if selected_recipient:
-    filtered_data = filtered_data[filtered_data["recipient"] == selected_recipient]
+selected_recipients = st.sidebar.multiselect(
+    "Recipient", unique_recipients, default=None
+)
+if selected_recipients:
+    filtered_data = filtered_data[filtered_data["recipient"].isin(selected_recipients)]
 
 unique_sectors = data["lowy sector"].unique()
 unique_sectors.sort()
-selected_sector = st.sidebar.selectbox("Sector", unique_sectors, index=None)
-if selected_sector:
-    filtered_data = filtered_data[filtered_data["lowy sector"] == selected_sector]
+selected_sectors = st.sidebar.multiselect("Sector", unique_sectors, default=None)
+if selected_sectors:
+    filtered_data = filtered_data[filtered_data["lowy sector"].isin(selected_sectors)]
 
 unique_aid_type = data["flow type"].unique()
 unique_aid_type.sort()
-selected_aid_type = st.sidebar.selectbox("Aid type", unique_aid_type, index=None)
-if selected_aid_type:
-    filtered_data = filtered_data[filtered_data["flow type"] == selected_aid_type]
+selected_aid_types = st.sidebar.multiselect("Aid type", unique_aid_type, default=None)
+if selected_aid_types:
+    filtered_data = filtered_data[filtered_data["flow type"].isin(selected_aid_types)]
 
 # year filter: from 2008 to 2021
 year_range = st.sidebar.slider("Year range", 2008, 2021, (2008, 2021), format="%d")
-# filter using column "final transaction date"
 if year_range:
     filtered_data = filtered_data[
         (filtered_data["final transaction date"].dt.year >= year_range[0])
