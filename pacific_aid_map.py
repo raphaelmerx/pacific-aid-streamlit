@@ -120,7 +120,10 @@ fig = px.bar(
     pivot_data,
     x=pivot_data.index,
     y=[col for col in pivot_data.columns],
-    labels={"value": "Value (in USD)"},
+    labels={
+        "value": f"{selected_transaction_type} (in USD)",
+        "final transaction date": "Year",
+    },
     title=None,
 )
 
@@ -132,7 +135,7 @@ st.plotly_chart(fig)
 
 # END BAR CHART value by year
 
-## BAR CHART value by sector
+## PIE CHART value by sector
 
 st.subheader(f"{selected_transaction_type} by sector")
 
@@ -158,7 +161,9 @@ fig = px.pie(
     names="Sector",
     values="Value",
     title=None,
-    labels={"Value": "Value (in USD)"},
+    labels={
+        "Value": f"{selected_transaction_type} (in USD)",
+    },
     custom_data=["Humanized_Value"],
 )
 fig.for_each_trace(
@@ -170,7 +175,47 @@ fig.for_each_trace(
 # Display the Plotly chart in Streamlit
 st.plotly_chart(fig)
 
-# END BAR CHART value by sector
+# END PIE CHART value by sector
+
+
+## BAR CHART value by year and sector
+
+st.subheader(f"{selected_transaction_type} by year and sector")
+
+# Group data by year and "Aid type"
+grouped_data = (
+    filtered_data.groupby(
+        [filtered_data["final transaction date"].dt.year, "lowy sector"]
+    )["usd constant - transaction value"]
+    .sum()
+    .reset_index()
+)
+
+pivot_data = grouped_data.pivot(
+    index="final transaction date",
+    columns="lowy sector",
+    values="usd constant - transaction value",
+).fillna(0)
+
+# Create the Plotly figure for a stacked bar chart
+fig = px.bar(
+    pivot_data,
+    x=pivot_data.index,
+    y=[col for col in pivot_data.columns],
+    labels={
+        "value": f"{selected_transaction_type} (in USD)",
+        "final transaction date": "Year",
+    },
+    title=None,
+)
+
+fig.update_layout(barmode="stack")
+
+# Display the Plotly chart in Streamlit
+st.plotly_chart(fig)
+
+
+# END BAR CHART value by year and sector
 
 col1, col2 = st.columns(2)
 
