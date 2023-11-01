@@ -1,3 +1,4 @@
+import json
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -31,11 +32,13 @@ def load_data(nrows=None):
 
 
 @st.cache_data
-def load_country_coords():
-    return pd.read_csv("./country_coords.csv")
+def load_countries_geojson():
+    with open("./countries.geojson") as f:
+        countries_geojson = json.load(f)
+    return countries_geojson
 
 
-country_coords = load_country_coords()
+countries_geojson = load_countries_geojson()
 
 
 data_load_state = st.markdown("Loading data...")
@@ -213,43 +216,26 @@ with col2:
 
 # BEGIN: map of value by recipient
 
-map_data = pd.merge(
-    sum_value_df.reset_index(), country_coords, on="recipient", how="left"
-)
-# remove those that have null latitude
-map_data = map_data[map_data["latitude"].notnull()]
-map_data[selected_transaction_type] = map_data["Value"].apply(humanize.intword)
+sum_value_df = sum_value_df.reset_index()
 
-fig = px.scatter_geo(
-    map_data,
-    lat="latitude",
-    lon="longitude",
-    size="Value",
-    text="recipient",
-    hover_name="recipient",
-    hover_data={
-        "recipient": True,
-        selected_transaction_type: True,
-        "Value": False,
-        "latitude": False,
-        "longitude": False,
-    },
+fig = px.choropleth(
+    sum_value_df,
+    geojson=countries_geojson,
+    locations="recipient",
+    featureidkey="properties.ADMIN",
+    color="Value",
+    color_continuous_scale="Viridis",
     projection="natural earth",
-    title=f"{selected_transaction_type} by recipient map",
 )
-
-first_element = map_data.iloc[0]
-center_lat = first_element["latitude"]
-center_lon = first_element["longitude"]
 
 fig.update_geos(
-    center=dict(lat=center_lat, lon=center_lon),
-    projection=dict(scale=2),  # Adjust the scale as needed
+    visible=False,
+    center={"lat": -10.315915614318742, "lon": 157.97284684821733},
+    projection={"scale": 6},
 )
+fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
-# Show the plot
 st.plotly_chart(fig)
-
 
 # END: map of value by recipient
 
