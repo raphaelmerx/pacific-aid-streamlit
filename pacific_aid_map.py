@@ -97,38 +97,38 @@ if year_range:
 
 ## BAR CHART value by year
 
-st.subheader(f"{selected_transaction_type} by year")
+st.subheader(f"{selected_transaction_type} by year and aid type")
 
-# get data
-grouped_data = filtered_data.groupby(filtered_data["final transaction date"].dt.year)[
-    "usd constant - transaction value"
-].sum()
-sum_value_df = pd.DataFrame(
-    {
-        "Year": grouped_data.index.astype(str),
-        "Value": grouped_data.values,
-    }
+# Group data by year and "Aid type"
+grouped_data = (
+    filtered_data.groupby(
+        [filtered_data["final transaction date"].dt.year, "flow type"]
+    )["usd constant - transaction value"]
+    .sum()
+    .reset_index()
 )
-sum_value_df = sum_value_df.set_index("Year")
 
+# Pivot the data to get "flow type" as columns
+pivot_data = grouped_data.pivot(
+    index="final transaction date",
+    columns="flow type",
+    values="usd constant - transaction value",
+).fillna(0)
 
-# add humanized value column
-sum_value_df["Humanized_Value"] = sum_value_df["Value"].apply(humanize.intword)
-
-# Create the Plotly figure
+# Create the Plotly figure for a stacked bar chart
 fig = px.bar(
-    sum_value_df.reset_index(),
-    x="Year",
-    y="Value",
-    labels={"Value": "Value (in USD)"},
-    text="Humanized_Value",
+    pivot_data,
+    x=pivot_data.index,
+    y=[col for col in pivot_data.columns],
+    labels={"value": "Value (in USD)"},
+    title=None,
 )
-fig.for_each_trace(
-    lambda trace: trace.update(hovertemplate="Year: %{x}<br>Value: %{text}")
-)
+
+fig.update_layout(barmode="stack")
 
 # Display the Plotly chart in Streamlit
 st.plotly_chart(fig)
+
 
 # END BAR CHART value by year
 
@@ -215,6 +215,8 @@ with col2:
 # END: value by recipient table
 
 # BEGIN: map of value by recipient
+
+st.subheader(f"{selected_transaction_type} by recipient map")
 
 sum_value_df = sum_value_df.reset_index()
 
